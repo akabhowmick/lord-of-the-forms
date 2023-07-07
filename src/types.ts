@@ -5,3 +5,5 @@ export type UserInformation = {
     city: string;
     phone: string;
 }
+
+export type PhoneNumberState = [string, string, string, string];

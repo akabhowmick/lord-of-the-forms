@@ -1,60 +1,150 @@
-import { ErrorMessage } from "../ErrorMessage";
+import { useState } from "react";
+import { FunctionalTextField } from "./FunctionalTextField";
+import { PhoneNumberState, UserInformation } from "../types";
+import {
+  isCityValid,
+  isEmailValid,
+  isNameValid,
+  isValidPhoneNumber,
+} from "../utils/validations";
+import { FunctionalPhoneInput } from "./FunctionalTelephoneInput";
 
-const firstNameErrorMessage = "First name must be at least 2 characters long";
-const lastNameErrorMessage = "Last name must be at least 2 characters long";
+const firstNameErrorMessage =
+  "First name must be at least 2 characters long and contain only letters";
+const lastNameErrorMessage =
+  "Last name must be at least 2 characters long and contain only letters";
 const emailErrorMessage = "Email is Invalid";
-const cityErrorMessage = "State is Invalid";
+const cityErrorMessage = "City is Invalid";
 const phoneNumberErrorMessage = "Invalid Phone Number";
 
-export const FunctionalForm = () => {
+export const FunctionalForm = ({
+  handleUserInfo,
+}: {
+  handleUserInfo: (newUserData: UserInformation) => void;
+}) => {
+  const [firstNameInput, setFirstNameInput] = useState("");
+  const [lastNameInput, setLastNameInput] = useState("");
+  const [emailInput, setEmailInput] = useState("");
+  const [cityInput, setCityInput] = useState("");
+  const [phoneNumberInput, setPhoneNumberInput] = useState<PhoneNumberState>([
+    "",
+    "",
+    "",
+    "",
+  ]);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  //validate the state inputs as they update
+  const isFirstNameValid = isNameValid(firstNameInput);
+  const isLastNameValid = isNameValid(lastNameInput);
+  const isEmailInputValid = isEmailValid(emailInput);
+  const isCityInputValid = isCityValid(cityInput);
+  const isPhoneNumberValid = isValidPhoneNumber(phoneNumberInput.join(""));
+
+  const reset = () => {
+    setFirstNameInput("");
+    setLastNameInput("");
+    setEmailInput("");
+    setCityInput("");
+    setPhoneNumberInput(["", "", "", ""]);
+    setIsSubmitted(false);
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitted(true);
+    if (
+      isPhoneNumberValid &&
+      isCityInputValid &&
+      isEmailInputValid &&
+      isLastNameValid &&
+      isFirstNameValid
+    ) {
+      //set User and reset form
+      handleUserInfo({
+        firstName: firstNameInput,
+        lastName: lastNameInput,
+        email: emailInput,
+        city: cityInput,
+        phone: phoneNumberInput.join(""),
+      });
+      reset();
+    } else {
+      alert("one or more inputs contain errors");
+    }
+  };
+
   return (
-    <form>
+    <form onSubmit={(e) => handleSubmit(e)}>
       <u>
         <h3>User Information Form</h3>
       </u>
 
       {/* first name input */}
-      <div className="input-wrap">
-        <label>{"First Name"}:</label>
-        <input placeholder="Bilbo" />
-      </div>
-      <ErrorMessage message={firstNameErrorMessage} show={true} />
+      <FunctionalTextField
+        label="First Name"
+        inputProps={{
+          placeholder: "Bilbo",
+          value: firstNameInput,
+          onChange: (e) => {
+            setFirstNameInput(e.target.value);
+          },
+        }}
+        errorMessage={firstNameErrorMessage}
+        shouldDisplayError={!isFirstNameValid && isSubmitted}
+      />
 
       {/* last name input */}
-      <div className="input-wrap">
-        <label>{"Last Name"}:</label>
-        <input placeholder="Baggins" />
-      </div>
-      <ErrorMessage message={lastNameErrorMessage} show={true} />
+      <FunctionalTextField
+        label="Last Name"
+        inputProps={{
+          placeholder: "Baggins",
+          value: lastNameInput,
+          onChange: (e) => {
+            setLastNameInput(e.target.value);
+          },
+        }}
+        errorMessage={lastNameErrorMessage}
+        shouldDisplayError={!isLastNameValid && isSubmitted}
+      />
 
       {/* Email Input */}
-      <div className="input-wrap">
-        <label>{"Email"}:</label>
-        <input placeholder="bilbo-baggins@adventurehobbits.net" />
-      </div>
-      <ErrorMessage message={emailErrorMessage} show={true} />
+      <FunctionalTextField
+        label="Email"
+        inputProps={{
+          placeholder: "bilbo-baggins@adventurehobbits.net",
+          value: emailInput,
+          onChange: (e) => {
+            setEmailInput(e.target.value);
+          },
+        }}
+        errorMessage={emailErrorMessage}
+        shouldDisplayError={!isEmailInputValid && isSubmitted}
+      />
 
       {/* City Input */}
-      <div className="input-wrap">
-        <label>{"City"}:</label>
-        <input placeholder="Hobbiton" />
-      </div>
-      <ErrorMessage message={cityErrorMessage} show={true} />
+      {/* Passed in extra list prop since datalist is provided in the App.tsx */}
+      <FunctionalTextField
+        label="City"
+        inputProps={{
+          placeholder: "Hobbiton",
+          value: cityInput,
+          onChange: (e) => {
+            setCityInput(e.target.value);
+          },
+          list: "cities",
+        }}
+        errorMessage={cityErrorMessage}
+        shouldDisplayError={!isCityInputValid && isSubmitted}
+      />
 
-      <div className="input-wrap">
-        <label htmlFor="phone">Phone:</label>
-        <div id="phone-input-wrap">
-          <input type="text" id="phone-input-1" placeholder="55" />
-          -
-          <input type="text" id="phone-input-2" placeholder="55" />
-          -
-          <input type="text" id="phone-input-3" placeholder="55" />
-          -
-          <input type="text" id="phone-input-4" placeholder="5" />
-        </div>
-      </div>
-
-      <ErrorMessage message={phoneNumberErrorMessage} show={true} />
+      {/* Phone Input */}
+      <FunctionalPhoneInput
+        errorMessage={phoneNumberErrorMessage}
+        shouldShowError={isSubmitted && !isPhoneNumberValid}
+        phoneNumberInput={phoneNumberInput}
+        setPhoneNumberInput={setPhoneNumberInput}
+      />
 
       <input type="submit" value="Submit" />
     </form>
